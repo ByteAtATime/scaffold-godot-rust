@@ -1,6 +1,11 @@
 [package]
 name = "scaffold-godot-rust"
 version = "0.1.0"
+authors = ["ByteAtATime <byteatatime@proton.me>"]
+description = "A simple scaffold for Godot Rust projects"
+license = "MIT"
+repository = "https://github.com/ByteAtATime/scaffold-godot-rust"
+keywords = ["godot", "scaffold", "template"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

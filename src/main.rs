@@ -6,7 +6,7 @@ use colored::Colorize;
 fn main() -> Result<(), Error> {
     intro("Scaffold Godot-Rust Project".on_cyan().black())?;
 
-    let dir: PathBuf = input("Project Directory: ").default_input(".").interact()?;
+    let dir: PathBuf = input("Project Directory (leave empty for current folder): ").default_input(".").interact()?;
     let git = confirm("Initialize Git Repository?").interact()?;
 
     log::info("[Godot]".underline().bold())?;

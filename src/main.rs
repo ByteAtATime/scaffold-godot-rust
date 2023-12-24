@@ -1,13 +1,23 @@
 use std::{io::Error, path::PathBuf};
 
-use cliclack::{confirm, input, intro, log, outro};
+use cliclack::{input, intro, log, multiselect, outro};
 use colored::Colorize;
+
+#[derive(Default, Clone, PartialEq, Eq, Debug)]
+enum QolFeatures {
+    #[default] // needed for multi-select
+    Git,
+    ReloadableExtension,
+    VscodeLaunchConfig,
+    VscodeExtensions,
+}
 
 fn main() -> Result<(), Error> {
     intro("Scaffold Godot-Rust Project".on_cyan().black())?;
 
-    let dir: PathBuf = input("Project Directory (leave empty for current folder): ").default_input(".").interact()?;
-    let git = confirm("Initialize Git Repository?").interact()?;
+    let dir: PathBuf = input("Project Directory (leave empty for current folder): ")
+        .default_input(".")
+        .interact()?;
 
     log::info("[Godot]".underline().bold())?;
 
@@ -26,6 +36,26 @@ fn main() -> Result<(), Error> {
         .default_input("rust")
         .interact()?;
 
+    let qol_features: Vec<QolFeatures> = multiselect("QOL Features")
+        .item(QolFeatures::Git, "Git", "")
+        .item(
+            QolFeatures::ReloadableExtension,
+            "Reloadable Extension",
+            "make the GDExtension reloadable",
+        )
+        .item(
+            QolFeatures::VscodeLaunchConfig,
+            "VSCode Launch Config",
+            "create .vscode/launch.json",
+        )
+        .item(
+            QolFeatures::VscodeExtensions,
+            "VSCode Extensions",
+            "create .vscode/extensions.json with recommended extensions",
+        )
+        .required(false)
+        .interact()?;
+
     let godot_full_path = dir.join(&godot_dir_name);
     let rust_full_path = dir.join(&rust_dir_name);
 
@@ -39,7 +69,10 @@ fn main() -> Result<(), Error> {
 
     std::fs::write(
         godot_full_path.join(format!("{}.gdextension", &rust_name)),
-        generate_gdextention_file(&rust_name),
+        generate_gdextention_file(
+            &rust_name,
+            qol_features.contains(&QolFeatures::ReloadableExtension),
+        ),
     )?;
 
     std::fs::write(
@@ -69,14 +102,59 @@ struct MyExtension;
 unsafe impl ExtensionLibrary for MyExtension {}"#,
     )?;
 
-    if git {
-        log::info("Initializing Git Repository")?;
-        std::process::Command::new("git")
-            .arg("init")
-            .current_dir(&dir)
-            .spawn()?
-            .wait()?;
+    for feature in qol_features {
+        match feature {
+            QolFeatures::Git => {
+                log::info("Initializing Git")?;
+                std::process::Command::new("git")
+                    .arg("init")
+                    .current_dir(&dir)
+                    .spawn()?
+                    .wait()?;
+            }
+            QolFeatures::VscodeLaunchConfig => {
+                log::info("Creating VSCode Launch Config")?;
+
+                let default_godot_location = if cfg!(target_os = "windows") {
+                    "C:\\Program Files\\Godot\\Godot_v4.2.1-stable_win64.exe"
+                } else if cfg!(target_os = "macos") {
+                    "/Applications/Godot.app/Contents/MacOS/Godot"
+                } else {
+                    "/usr/bin/godot"
+                };
+
+                let godot_location: String = input("Godot Executable Location: ")
+                    .default_input(default_godot_location)
+                    .interact()?;
+
+                std::fs::create_dir_all(rust_full_path.join(".vscode"))?;
+                std::fs::write(
+                    rust_full_path.join(".vscode/launch.json"),
+                    generate_launch_config(
+                        &godot_full_path,
+                        &godot_location,
+                    ),
+                )?;
+            }
+            QolFeatures::VscodeExtensions => {
+                log::info("Creating VSCode Extensions Config")?;
+
+                std::fs::create_dir_all(rust_full_path.join(".vscode"))?;
+                std::fs::write(
+                    rust_full_path.join(".vscode/extensions.json"),
+                    r#"{
+    "recommendations": [
+        "rust-lang.rust",
+        "vadimcn.vscode-lldb",
+        "1YiB.rust-bundle",
+        "tamasfe.even-better-toml"
+    ]
+}"#)?;
+            }
+            _ => {}
+        };
     }
+
 
     outro("Done! Enjoy your new project!")
 }
@@ -107,11 +185,12 @@ renderer/rendering_method.mobile="gl_compatibility""#,
     )
 }
 
-fn generate_gdextention_file(project_name: &str) -> String {
-    r#"[configuration]
+fn generate_gdextention_file(project_name: &str, reloadable: bool) -> String {
+    format!(
+        r#"[configuration]
 entry_symbol = "gdext_rust_init"
 compatibility_minimum = 4.1
-
+{reloadable}
 [libraries]
 linux.debug.x86_64 =     "res://../rust/target/debug/lib{YourCrate}.so"
 linux.release.x86_64 =   "res://../rust/target/release/lib{YourCrate}.so"
@@ -120,8 +199,14 @@ windows.release.x86_64 = "res://../rust/target/release/{YourCrate}.dll"
 macos.debug =            "res://../rust/target/debug/lib{YourCrate}.dylib"
 macos.release =          "res://../rust/target/release/lib{YourCrate}.dylib"
 macos.debug.arm64 =      "res://../rust/target/debug/lib{YourCrate}.dylib"
-macos.release.arm64 =    "res://../rust/target/release/lib{YourCrate}.dylib""#
-        .replace("{YourCrate}", project_name)
+macos.release.arm64 =    "res://../rust/target/release/lib{YourCrate}.dylib""#,
+        reloadable = if reloadable {
+            "reloadable = true\n"
+        } else {
+            ""
+        },
+        YourCrate = project_name
+    )
 }
 
 fn generate_cargo_toml(project_name: &str) -> String {
@@ -138,5 +223,27 @@ crate-type = ["cdylib"]  # Compile this crate to a dynamic C library.
 godot = {{ git = "https://github.com/godot-rust/gdext", branch = "master" }}
 "#,
         project_name
+    )
+}
+
+fn generate_launch_config(godot_dir: &PathBuf, godot_location: &str) -> String {
+    format!(
+        r#"{{
+    "configurations": [
+        {{
+            "name": "Debug Project (Godot 4)",
+            "type": "lldb",
+            "request": "launch",
+            "preLaunchTask": "rust: cargo build",
+            "cwd": "{}",
+            "args": [
+                "-e", // run editor (remove this to launch the scene directly)
+                "-w", // windowed mode
+            ],
+            "program": "{}"
+        }}
+    ]
+}}"#,
+        godot_dir.as_path().display(), godot_location
     )
 }

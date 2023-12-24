@@ -131,7 +131,7 @@ unsafe impl ExtensionLibrary for MyExtension {}"#,
                 std::fs::write(
                     rust_full_path.join(".vscode/launch.json"),
                     generate_launch_config(
-                        &godot_full_path,
+                        &godot_dir_name,
                         &godot_location,
                     ),
                 )?;
@@ -226,7 +226,7 @@ godot = {{ git = "https://github.com/godot-rust/gdext", branch = "master" }}
     )
 }
 
-fn generate_launch_config(godot_dir: &PathBuf, godot_location: &str) -> String {
+fn generate_launch_config(godot_dir: &str, godot_location: &str) -> String {
     format!(
         r#"{{
     "configurations": [
@@ -235,7 +235,7 @@ fn generate_launch_config(godot_dir: &PathBuf, godot_location: &str) -> String {
             "type": "lldb",
             "request": "launch",
             "preLaunchTask": "rust: cargo build",
-            "cwd": "{}",
+            "cwd": "${{workspaceFolder}}/../{}",
             "args": [
                 "-e", // run editor (remove this to launch the scene directly)
                 "-w", // windowed mode
@@ -244,6 +244,6 @@ fn generate_launch_config(godot_dir: &PathBuf, godot_location: &str) -> String {
         }}
     ]
 }}"#,
-        godot_dir.as_path().display(), godot_location
+        godot_dir, godot_location
     )
 }

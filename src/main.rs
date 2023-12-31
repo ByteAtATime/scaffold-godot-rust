@@ -40,7 +40,7 @@ fn main() -> Result<(), Error> {
         .default_input("rust")
         .interact()?;
 
-    let qol_features: Vec<QolFeature> = multiselect("QOL Features")
+    let qol_features: Vec<QolFeature> = multiselect("QOL Features (arrows to move, space to select, enter to submit)")
         .item(QolFeature::Git, "Git", "")
         .item(
             QolFeature::ReloadableExtension,

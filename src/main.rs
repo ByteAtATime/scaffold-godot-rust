@@ -90,7 +90,7 @@ fn main() -> Result<(), Error> {
 
     std::fs::write(
         rust_full_path.join(".gitignore"),
-        generate_godot_gitignore(),
+        generate_rust_gitignore(),
     )?;
 
     std::fs::write(

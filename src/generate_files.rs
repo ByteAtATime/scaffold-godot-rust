@@ -103,7 +103,8 @@ export_presets.cfg
 # Mono-specific ignores
 .mono/
 data_*/
-mono_crash.*.json"#.to_string()
+mono_crash.*.json"#
+        .to_string()
 }
 
 pub fn generate_rust_gitignore() -> String {
@@ -120,5 +121,6 @@ target/
 **/*.rs.bk
 
 # MSVC Windows builds of rustc generate these, which store debugging information
-*.pdb"#.to_string()
+*.pdb"#
+        .to_string()
 }

@@ -63,7 +63,12 @@ fn main() -> Result<(), Error> {
     let godot_full_path = dir.join(&godot_dir_name);
     let rust_full_path = dir.join(&rust_dir_name);
 
-    create_godot_project(godot_full_path.clone(), &godot_name, &rust_name, qol_features.clone())?;
+    create_godot_project(
+        godot_full_path.clone(),
+        &godot_name,
+        &rust_name,
+        qol_features.clone(),
+    )?;
 
     create_rust_project(rust_full_path.clone(), &rust_name)?;
 
@@ -72,7 +77,12 @@ fn main() -> Result<(), Error> {
     outro("Done! Enjoy your new project!")
 }
 
-fn create_godot_project(godot_full_path: PathBuf, godot_name: &str, rust_name: &str, qol_features: Vec<QolFeature>) -> Result<(), Error> {
+fn create_godot_project(
+    godot_full_path: PathBuf,
+    godot_name: &str,
+    rust_name: &str,
+    qol_features: Vec<QolFeature>,
+) -> Result<(), Error> {
     log::info("Creating Godot Project")?;
     std::fs::create_dir_all(&godot_full_path)?;
 
@@ -106,10 +116,7 @@ fn create_rust_project(rust_full_path: PathBuf, rust_name: &str) -> Result<(), E
     log::info("Creating Rust Project")?;
     std::fs::create_dir_all(&rust_full_path)?;
 
-    std::fs::write(
-        rust_full_path.join(".gitignore"),
-        generate_rust_gitignore(),
-    )?;
+    std::fs::write(rust_full_path.join(".gitignore"), generate_rust_gitignore())?;
 
     std::fs::write(
         rust_full_path.join("Cargo.toml"),
@@ -133,7 +140,12 @@ unsafe impl ExtensionLibrary for MyExtension {}"#,
     Ok(())
 }
 
-fn generate_qol_features(qol_features: Vec<QolFeature>, dir: PathBuf, rust_full_path: PathBuf, godot_dir_name: &str) -> Result<(), Error> {
+fn generate_qol_features(
+    qol_features: Vec<QolFeature>,
+    dir: PathBuf,
+    rust_full_path: PathBuf,
+    godot_dir_name: &str,
+) -> Result<(), Error> {
     for feature in qol_features {
         match feature {
             QolFeature::Git => {
@@ -162,10 +174,7 @@ fn generate_qol_features(qol_features: Vec<QolFeature>, dir: PathBuf, rust_full_
                 std::fs::create_dir_all(rust_full_path.join(".vscode"))?;
                 std::fs::write(
                     rust_full_path.join(".vscode/launch.json"),
-                    generate_launch_config(
-                        godot_dir_name,
-                        &godot_location,
-                    ),
+                    generate_launch_config(godot_dir_name, &godot_location),
                 )?;
             }
             QolFeature::VscodeExtensions => {
@@ -181,7 +190,8 @@ fn generate_qol_features(qol_features: Vec<QolFeature>, dir: PathBuf, rust_full_
         "1YiB.rust-bundle",
         "tamasfe.even-better-toml"
     ]
-}"#)?;
+}"#,
+                )?;
             }
             _ => {}
         };

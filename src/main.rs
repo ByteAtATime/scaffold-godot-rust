@@ -1,9 +1,9 @@
 mod generate_files;
 
-use clean_path::Clean;
+use clean_path::{Clean, clean};
 use generate_files::*;
 
-use std::{io::Error, path::PathBuf};
+use std::{io::Error, path::{PathBuf, Component}};
 
 use cliclack::{input, intro, log, multiselect, outro};
 use colored::Colorize;
@@ -30,6 +30,8 @@ fn main() -> Result<(), Error> {
     let godot_dir_name: String = input("Godot Directory Name: ")
         .default_input("godot")
         .interact()?;
+    let godot_dir_name = clean(&godot_dir_name);
+
     let godot_name: String = input("Project Name: ").interact()?;
 
     log::info("[Rust]".underline().bold())?;
@@ -37,6 +39,7 @@ fn main() -> Result<(), Error> {
     let rust_dir_name: String = input("Rust Directory Name: ")
         .default_input("rust")
         .interact()?;
+    let rust_dir_name = clean(&rust_dir_name);
 
     let rust_name: String = input("Rust Project Name: ")
         .default_input("rust")
@@ -68,7 +71,9 @@ fn main() -> Result<(), Error> {
 
     create_godot_project(
         godot_full_path.clone(),
+        &godot_dir_name,
         &godot_name,
+        &rust_dir_name,
         &rust_name,
         qol_features.clone(),
     )?;
@@ -82,7 +87,9 @@ fn main() -> Result<(), Error> {
 
 fn create_godot_project(
     godot_full_path: PathBuf,
+    godot_dir: &PathBuf,
     godot_name: &str,
+    rust_dir: &PathBuf,
     rust_name: &str,
     qol_features: Vec<QolFeature>,
 ) -> Result<(), Error> {
@@ -99,11 +106,19 @@ fn create_godot_project(
         generate_godot_project_file(&godot_name),
     )?;
 
+    let mut godot_components = godot_dir.components();
+
     std::fs::write(
         godot_full_path.join(format!("{}.gdextension", &rust_name)),
         generate_gdextention_file(
             &rust_name,
             qol_features.contains(&QolFeature::ReloadableExtension),
+            if godot_components.clone().count() == 1 && godot_components.next().unwrap() == Component::Normal(".".as_ref()) {
+                0
+            } else {
+                godot_components.count()
+            },
+            rust_dir,
         ),
     )?;
 
@@ -147,7 +162,7 @@ fn generate_qol_features(
     qol_features: Vec<QolFeature>,
     dir: PathBuf,
     rust_full_path: PathBuf,
-    godot_dir_name: &str,
+    godot_dir_name: &PathBuf,
 ) -> Result<(), Error> {
     for feature in qol_features {
         match feature {

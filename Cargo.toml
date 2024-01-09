@@ -1,6 +1,6 @@
 [package]
 name = "scaffold-godot-rust"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["ByteAtATime <byteatatime@proton.me>"]
 description = "A simple scaffold for Godot Rust projects"
 license = "MIT"
@@ -13,3 +13,4 @@ edition = "2021"
 [dependencies]
 colored = "2.1.0"
 cliclack = "0.1.10"
+clean-path = "0.2.1"

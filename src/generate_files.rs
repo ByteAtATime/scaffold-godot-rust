@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 pub fn generate_godot_project_file(project_name: &str) -> String {
     format!(
         r#"; Engine configuration file.
@@ -24,21 +26,22 @@ renderer/rendering_method.mobile="gl_compatibility""#,
     )
 }
 
-pub fn generate_gdextention_file(project_name: &str, reloadable: bool) -> String {
+pub fn generate_gdextention_file(project_name: &str, reloadable: bool, backtrack_count: usize, rust_dir: &PathBuf) -> String {
+    let rust_path = std::iter::repeat("../").take(backtrack_count as usize).collect::<String>() + rust_dir.to_str().unwrap();
     format!(
         r#"[configuration]
 entry_symbol = "gdext_rust_init"
 compatibility_minimum = 4.1
 {reloadable}
 [libraries]
-linux.debug.x86_64 =     "res://../rust/target/debug/lib{YourCrate}.so"
-linux.release.x86_64 =   "res://../rust/target/release/lib{YourCrate}.so"
-windows.debug.x86_64 =   "res://../rust/target/debug/{YourCrate}.dll"
-windows.release.x86_64 = "res://../rust/target/release/{YourCrate}.dll"
-macos.debug =            "res://../rust/target/debug/lib{YourCrate}.dylib"
-macos.release =          "res://../rust/target/release/lib{YourCrate}.dylib"
-macos.debug.arm64 =      "res://../rust/target/debug/lib{YourCrate}.dylib"
-macos.release.arm64 =    "res://../rust/target/release/lib{YourCrate}.dylib""#,
+linux.debug.x86_64 =     "res://{rust_path}/target/debug/lib{YourCrate}.so"
+linux.release.x86_64 =   "res://{rust_path}/target/release/lib{YourCrate}.so"
+windows.debug.x86_64 =   "res://{rust_path}/target/debug/{YourCrate}.dll"
+windows.release.x86_64 = "res://{rust_path}/target/release/{YourCrate}.dll"
+macos.debug =            "res://{rust_path}/target/debug/lib{YourCrate}.dylib"
+macos.release =          "res://{rust_path}/target/release/lib{YourCrate}.dylib"
+macos.debug.arm64 =      "res://{rust_path}/target/debug/lib{YourCrate}.dylib"
+macos.release.arm64 =    "res://{rust_path}/target/release/lib{YourCrate}.dylib""#,
         reloadable = if reloadable {
             "reloadable = true\n"
         } else {
@@ -65,7 +68,7 @@ godot = {{ git = "https://github.com/godot-rust/gdext", branch = "master" }}
     )
 }
 
-pub fn generate_launch_config(godot_dir: &str, godot_location: &str) -> String {
+pub fn generate_launch_config(godot_dir: &PathBuf, godot_location: &str) -> String {
     format!(
         r#"{{
     "configurations": [
@@ -83,7 +86,7 @@ pub fn generate_launch_config(godot_dir: &str, godot_location: &str) -> String {
         }}
     ]
 }}"#,
-        godot_dir, godot_location
+        godot_dir.to_str().unwrap(), godot_location
     )
 }
 

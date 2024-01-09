@@ -1,5 +1,6 @@
 mod generate_files;
 
+use clean_path::Clean;
 use generate_files::*;
 
 use std::{io::Error, path::PathBuf};
@@ -22,6 +23,7 @@ fn main() -> Result<(), Error> {
     let dir: PathBuf = input("Project Directory (leave empty for current folder): ")
         .default_input(".")
         .interact()?;
+    let dir = dir.clean();
 
     log::info("[Godot]".underline().bold())?;
 
@@ -61,8 +63,8 @@ fn main() -> Result<(), Error> {
             .required(false)
             .interact()?;
 
-    let godot_full_path = dir.join(&godot_dir_name);
-    let rust_full_path = dir.join(&rust_dir_name);
+    let godot_full_path = dir.join(&godot_dir_name).clean();
+    let rust_full_path = dir.join(&rust_dir_name).clean();
 
     create_godot_project(
         godot_full_path.clone(),

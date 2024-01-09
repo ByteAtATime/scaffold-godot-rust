@@ -1,6 +1,6 @@
 [package]
 name = "scaffold-godot-rust"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["ByteAtATime <byteatatime@proton.me>"]
 description = "A simple scaffold for Godot Rust projects"
 license = "MIT"

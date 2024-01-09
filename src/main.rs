@@ -40,25 +40,26 @@ fn main() -> Result<(), Error> {
         .default_input("rust")
         .interact()?;
 
-    let qol_features: Vec<QolFeature> = multiselect("QOL Features (arrows to move, space to select, enter to submit)")
-        .item(QolFeature::Git, "Git", "")
-        .item(
-            QolFeature::ReloadableExtension,
-            "Reloadable Extension",
-            "make the GDExtension reloadable",
-        )
-        .item(
-            QolFeature::VscodeLaunchConfig,
-            "VSCode Launch Config",
-            "create .vscode/launch.json",
-        )
-        .item(
-            QolFeature::VscodeExtensions,
-            "VSCode Extensions",
-            "create .vscode/extensions.json with recommended extensions",
-        )
-        .required(false)
-        .interact()?;
+    let qol_features: Vec<QolFeature> =
+        multiselect("QOL Features (arrows to move, space to select, enter to submit)")
+            .item(QolFeature::Git, "Git", "")
+            .item(
+                QolFeature::ReloadableExtension,
+                "Reloadable Extension",
+                "make the GDExtension reloadable",
+            )
+            .item(
+                QolFeature::VscodeLaunchConfig,
+                "VSCode Launch Config",
+                "create .vscode/launch.json",
+            )
+            .item(
+                QolFeature::VscodeExtensions,
+                "VSCode Extensions",
+                "create .vscode/extensions.json with recommended extensions",
+            )
+            .required(false)
+            .interact()?;
 
     let godot_full_path = dir.join(&godot_dir_name);
     let rust_full_path = dir.join(&rust_dir_name);
